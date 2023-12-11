@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var seedToSoil []Range
@@ -24,6 +25,7 @@ type Range struct {
 }
 
 func main() {
+	start := time.Now()
 	file, err := os.Open("./input")
 	if err != nil {
 		log.Fatal(err)
@@ -37,6 +39,8 @@ func main() {
 
 	parseMaps(lines)
 	part1(lines)
+	elapsed := time.Since(start)
+	log.Printf("Time %s", elapsed)
 }
 
 func parseMaps(lines []string) {

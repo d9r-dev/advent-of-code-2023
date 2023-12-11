@@ -5,9 +5,21 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"unicode"
 )
+
+type NumberToken struct {
+	line  int
+	start int
+	end   int
+}
+
+type StarToken struct {
+	line  int
+	start int
+}
 
 func main() {
 	file, err := os.Open("input")
@@ -21,7 +33,10 @@ func main() {
 		lines = append(lines, scanner.Text())
 	}
 
+	part2(lines)
+
 	fmt.Printf("Result Part 1: %v \n", partOne(lines))
+	fmt.Printf("Result Part 2: %v \n", part2(lines))
 	// fmt.Printf("Result Part 2: %v \n", partTwo(lines))
 }
 
@@ -63,7 +78,6 @@ func partOne(lines []string) int {
 						for i := numberStart; i <= numberEnd; i++ {
 							digit = digit + string(line[i])
 						}
-						fmt.Printf("%v \n", digit)
 					}
 					numberStart = -1
 					numberEnd = -1
@@ -107,4 +121,60 @@ func checkSurroundings(lines []string, line int, numberStart int, numberEnd int)
 	}
 
 	return false
+}
+
+func part2(lines []string) int {
+
+	var allNumbers []NumberToken
+	var allStars []StarToken
+	numbers := regexp.MustCompile("\\d+")
+	stars := regexp.MustCompile("\\*")
+
+	var num [][]int
+
+	for i, line := range lines {
+		num = numbers.FindAllStringIndex(line, -1)
+		st := stars.FindAllStringIndex(line, -1)
+
+		for _, n := range num {
+			allNumbers = append(allNumbers, NumberToken{line: i, start: n[0], end: n[1]})
+		}
+
+		for _, s := range st {
+			allStars = append(allStars, StarToken{line: i, start: s[0]})
+		}
+	}
+	fmt.Println(allStars)
+
+	sum := 0
+	for _, star := range allStars {
+		sum = sum + checkAdjacentNumbers(star.line, star.start, allNumbers, lines)
+		println("star: ", star.line, star.start)
+	}
+
+	return sum
+}
+
+func checkAdjacentNumbers(line int, start int, numbers []NumberToken, lines []string) int {
+	var neighbors []string
+	for _, number := range numbers {
+		if number.line == line || number.line == line-1 || number.line == line+1 {
+			if (number.start >= start-3 && number.end > start-1) && (number.start <= start+1) {
+				n := ""
+				for j := number.start; j < number.end; j++ {
+					n += string(lines[number.line][j])
+				}
+
+				neighbors = append(neighbors, n)
+			}
+		}
+	}
+
+	if len(neighbors) == 2 {
+		println("neighbors: ", neighbors[0], neighbors[1])
+		number1, _ := strconv.Atoi(neighbors[0])
+		number2, _ := strconv.Atoi(neighbors[1])
+		return number1 * number2
+	}
+	return 0
 }
